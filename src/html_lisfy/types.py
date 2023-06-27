@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Optional
 
 
 import pydantic
@@ -10,6 +11,10 @@ class LisfyError(Exception):
     pass
 
 
+class ReaderError(LisfyError):
+    pass
+
+
 ## Values
 
 class Value(pydantic.BaseModel):
@@ -18,5 +23,5 @@ class Value(pydantic.BaseModel):
 
 class ValueElement(Value):
     tag: str
-    value: str | list[Value]
+    value: Optional[str | list[Value]] = None
     void: bool = False
