@@ -4,7 +4,7 @@ from . import rep
 def main():
     while True:
         try:
-            text = input('Enter text: ')
+            text = input('html-lisfy> ')
         except (EOFError, KeyboardInterrupt):
             break
 
