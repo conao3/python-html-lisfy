@@ -1,16 +1,28 @@
 from typing import Optional
 
+import more_itertools
 
-def read(x: str) -> Optional[str]:
+from . import reader
+from . import types
+
+
+def read(x: str) -> Optional[types.Value]:
+    stream = more_itertools.peekable(x)
+    res = reader.read(stream)
+    if isinstance(res, types.ValueElement) and res.tag == '__EOF__':
+        return None
+    return res
+
+
+def eval(x: Optional[types.Value]) -> Optional[types.Value]:
     return x
 
 
-def eval(x: Optional[str]) -> Optional[str]:
-    return x
-
-
-def print(x: Optional[str]) -> Optional[str]:
-    return x
+def print(x: Optional[types.Value]) -> Optional[str]:
+    if x is None:
+        return None
+    
+    return str(x)
 
 
 def rep(x: str) -> Optional[str]:
