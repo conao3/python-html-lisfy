@@ -62,6 +62,11 @@ def read(
 
     peek = input_stream.peek(None)
 
+    if peek is None:
+        if eof_error_p:
+            raise types.ReaderError('Unexpected EOF')
+        return eof_value
+
     if peek == '<':
         return read_element(input_stream)
 
