@@ -43,6 +43,7 @@ def read(
     input_stream: more_itertools.peekable[str],
     eof_error_p: bool = True,
     eof_value: types.Value = types.ValueElement(tag='__EOF__', value='', void=True),
+    recursive_p: bool = False,
 ) -> types.Value:
     subr.reader.skip_whitespace(input_stream)
 
