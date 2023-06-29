@@ -14,16 +14,28 @@ def read_element(input_stream: more_itertools.peekable[str]) -> types.ValueEleme
 
     tag = ''.join(subr.itertools.takewhile_inclusive(lambda x: (not x.isspace()) and x not in '/>', input_stream))
 
-    peek = subr.reader.peek_char(True, input_stream, recursive_p=True)
-
-    if peek == '/':
-        next(input_stream)  # Skip '/'
-        subr.reader.ensure_char('>', input_stream, recursive_p=True)
-        return types.ValueElement(tag=tag, void=True)
-
-    subr.reader.ensure_char('>', input_stream, recursive_p=True)
-
+    attr = {}
     child: list[str | types.Value] = []
+
+    while True:
+        peek = subr.reader.peek_char(True, input_stream, recursive_p=True)
+
+        if peek == '/':
+            next(input_stream)  # Skip '/'
+            subr.reader.ensure_char('>', input_stream, recursive_p=True)
+            return types.ValueElement(tag=tag, attr=attr)
+
+        if peek == '>':
+            next(input_stream)  # Skip '>'
+            break
+
+        attr_name = ''.join(subr.itertools.takewhile_inclusive(lambda x: (not x.isspace()) and x != '=', input_stream))
+        subr.reader.ensure_char('=', input_stream, recursive_p=True)
+        subr.reader.ensure_char('"', input_stream, recursive_p=True)
+        attr_value = ''.join(itertools.takewhile(lambda x: x != '"', input_stream))
+        attr[attr_name] = attr_value
+
+        peek = subr.reader.peek_char(True, input_stream, recursive_p=True)
 
     while True:
         body = ''.join(itertools.takewhile(lambda x: x != '<', input_stream))
@@ -41,7 +53,7 @@ def read_element(input_stream: more_itertools.peekable[str]) -> types.ValueEleme
 
         child.append(read_element(input_stream))
 
-    return types.ValueElement(tag=tag, value=child)
+    return types.ValueElement(tag=tag, attr=attr, value=child)
 
 
 def read(

@@ -24,13 +24,10 @@ class Value(pydantic.BaseModel):
 
 class ValueElement(Value):
     tag: str
+    attr: dict[str, str] = {}
     value: list[str | Value] = []
-    void: bool = False
 
     def lisfy(self, minify: bool=False) -> str:
-        if self.void:
-            return f'({self.tag} ((void . t)))'
-
         str_values: list[str] = []
         for v in self.value:
             if isinstance(v, str):
@@ -39,4 +36,8 @@ class ValueElement(Value):
 
             str_values.append(v.lisfy(minify=minify))
 
-        return f'({self.tag} nil {" ".join(str_values)})'
+        str_attrs = [f'({k} . "{v}")' for k, v in self.attr.items()]
+        str_attr = f'({" ".join(str_attrs)})' if str_attrs else 'nil'
+
+        str_body = ' '.join([self.tag, str_attr, *str_values])
+        return f'({str_body})'
