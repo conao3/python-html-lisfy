@@ -9,7 +9,7 @@ $ poetry run html-lisfy
 
 ## Example
 
-```bash
+```html
 $ poetry run html-lisfy
 html-lisfy> <h1>asdf</h1>
 (h1 nil asdf)
