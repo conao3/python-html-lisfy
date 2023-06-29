@@ -23,5 +23,5 @@ class Value(pydantic.BaseModel):
 
 class ValueElement(Value):
     tag: str
-    value: Optional[str | list[Value]] = None
+    value: Optional[list[str | Value]] = None
     void: bool = False

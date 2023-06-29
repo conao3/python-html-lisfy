@@ -1,60 +1,69 @@
 from __future__ import annotations
 
+from typing import Optional
+import itertools
+
 import more_itertools
 
 from . import types
 from . import subr
 
 
-def read_element(
-    input_stream: more_itertools.peekable[str],
-) -> types.ValueElement:
-    next(input_stream)  # Skip '<'
+def read_element(input_stream: more_itertools.peekable[str]) -> types.ValueElement:
+    _ = subr.reader.peek_char(True, input_stream, recursive_p=True)
 
-    subr.reader.skip_whitespace(input_stream)
+    tag = ''.join(subr.itertools.takewhile_inclusive(lambda x: (not x.isspace()) and x not in '/>', input_stream))
 
-    tag = ''.join(subr.itertools.takewhile_inclusive(lambda x: (not x.isspace()) and x != '>', input_stream))
-    subr.reader.skip_whitespace(input_stream)
-
-    peek = input_stream.peek(None)
-    if peek is None:
-        raise types.ReaderError('Unexpected EOF')
+    peek = subr.reader.peek_char(True, input_stream, recursive_p=True)
 
     if peek == '/':
         next(input_stream)  # Skip '/'
-        subr.reader.skip_whitespace_and_ensure(input_stream, '>')
+        subr.reader.ensure_char('>', input_stream, recursive_p=True)
         return types.ValueElement(tag=tag, void=True)
 
-    if peek != '>':
-        raise types.ReaderError(f'Expected ">", but got: {peek}')
+    subr.reader.ensure_char('>', input_stream, recursive_p=True)
 
-    next(input_stream)  # Skip '>'
+    child: list[str | types.Value] = []
 
-    body = ''.join(subr.itertools.takewhile_inclusive(lambda x: x != '<', input_stream))
-    subr.reader.skip_whitespace_and_ensure(input_stream, '<')
-    subr.reader.skip_whitespace_and_ensure(input_stream, '/')
-    subr.reader.skip_whitespace_and_ensure(input_stream, tag)
-    subr.reader.skip_whitespace_and_ensure(input_stream, '>')
+    while True:
+        body = ''.join(itertools.takewhile(lambda x: x != '<', input_stream))
 
-    return types.ValueElement(tag=tag, value=body)
+        if body:
+            child.append(body)
+
+        peek = subr.reader.peek_char(True, input_stream, recursive_p=True)
+
+        if peek == '/':
+            subr.reader.ensure_char('/', input_stream)
+            subr.reader.ensure_char(tag, input_stream)
+            subr.reader.ensure_char('>', input_stream)
+            break
+
+        r = read(input_stream, recursive_p=True)
+        child.append(r)
+
+    return types.ValueElement(tag=tag, value=child)
 
 
 def read(
     input_stream: more_itertools.peekable[str],
     eof_error_p: bool = True,
-    eof_value: types.Value = types.ValueElement(tag='__EOF__', value='', void=True),
+    eof_value: Optional[types.Value] = None,
     recursive_p: bool = False,
 ) -> types.Value:
-    subr.reader.skip_whitespace(input_stream)
+    peek = subr.reader.peek_char(True, input_stream, False, 'EOF', recursive_p=recursive_p)
 
-    peek = input_stream.peek(None)
-
-    if peek is None:
+    if peek == 'EOF':
         if eof_error_p:
             raise types.ReaderError('Unexpected EOF')
+
+        if eof_value is None:
+            raise ValueError('eof_value must be provided if eof_error_p is False')
+
         return eof_value
 
     if peek == '<':
+        next(input_stream)  # Skip '<'
         return read_element(input_stream)
 
-    return types.ValueElement(tag='__EOF__', value='', void=True)
+    return read_element(input_stream)

@@ -8,8 +8,8 @@ from . import types
 
 def read(x: str) -> Optional[types.Value]:
     stream = more_itertools.peekable(x)
-    res = reader.read(stream, eof_error_p=False)
-    if isinstance(res, types.ValueElement) and res.tag == '__EOF__':
+    res = reader.read(stream, eof_error_p=False, eof_value=types.ValueElement(tag='EOF'))
+    if isinstance(res, types.ValueElement) and res.tag == 'EOF':
         return None
     return res
 
