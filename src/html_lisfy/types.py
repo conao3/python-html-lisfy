@@ -18,10 +18,25 @@ class ReaderError(LisfyError):
 ## Values
 
 class Value(pydantic.BaseModel):
-    pass
+    def lisfy(self, minify: bool=False) -> str:
+        raise NotImplementedError
 
 
 class ValueElement(Value):
     tag: str
-    value: Optional[list[str | Value]] = None
+    value: list[str | Value] = []
     void: bool = False
+
+    def lisfy(self, minify: bool=False) -> str:
+        if self.void:
+            return f'({self.tag} ((void . t)))'
+
+        str_values: list[str] = []
+        for v in self.value:
+            if isinstance(v, str):
+                str_values.append(v)
+                continue
+
+            str_values.append(v.lisfy(minify=minify))
+
+        return f'({self.tag} nil {" ".join(str_values)})'
