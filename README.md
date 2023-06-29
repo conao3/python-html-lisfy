@@ -18,5 +18,8 @@ html-lisfy> <body><div>asdf</div></body>
 (body nil (div nil asdf))
 
 html-lisfy> <p>1111<br />2222</p>
-(p nil 1111 (br ((void . t))) 2222)
+(p nil 1111 (br nil) 2222)
+
+html-lisfy> <div class="container">asdf</div>
+(div ((class . "container")) asdf)
 ```
