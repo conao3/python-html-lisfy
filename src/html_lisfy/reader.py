@@ -39,8 +39,7 @@ def read_element(input_stream: more_itertools.peekable[str]) -> types.ValueEleme
             subr.reader.ensure_char('>', input_stream)
             break
 
-        r = read(input_stream, recursive_p=True)
-        child.append(r)
+        child.append(read_element(input_stream))
 
     return types.ValueElement(tag=tag, value=child)
 
@@ -66,4 +65,4 @@ def read(
         next(input_stream)  # Skip '<'
         return read_element(input_stream)
 
-    return read_element(input_stream)
+    raise types.ReaderError(f'Unexpected token: {peek}')
